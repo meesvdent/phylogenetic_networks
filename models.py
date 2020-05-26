@@ -35,10 +35,12 @@ class Node:
 
         branch.is_leaflet()
         if branch.name is None:
+            branch.order_features()
             branch.find_hierarchy()
 
         self.is_leaflet()
         if self.name is None:
+            branch.order_features()
             self.find_hierarchy()
 
         self.children.append(branch)
