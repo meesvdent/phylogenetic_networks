@@ -10,7 +10,6 @@ class Node:
         self.parent = parent
         self.children = []
         self.connections = []
-        self.missing_links = 0
         self.name = None
 
     def order_features(self):
@@ -37,7 +36,7 @@ class Node:
             self.features = self.features[1:len(self.features)]
             self.species = self.species[~branch_mask]
 
-            branch = Node(branch_sequences, branch_species, self.features, parent=self, missing_links=self.missing_links)
+            branch = Node(branch_sequences, branch_species, self.features, parent=self)
             self.children.append(branch)
 
             branch.find_hierarchy()
@@ -52,7 +51,6 @@ class Node:
             self.name = self.species[0]
         elif len(self.species) == 0:
             self.name = "Missing link for " + ' '.join([x.name for x in self.children])
-            self.missing_links += 1
 
 
 class PhylogeneticNetwork(Node):
