@@ -2,13 +2,15 @@ import numpy as np
 
 
 class Node:
-    def __init__(self, sequences, species, features, parent=None):
+    def __init__(self, sequences, species, features, parent=None, missing_links=0):
         self.sequences = np.array(sequences)
         self.features = np.array(features)
         self.species = np.array(species)
         self.order_features()
         self.parent = parent
         self.children = []
+        self.connections = []
+        self.missing_links = 0
         self.name = None
 
     def order_features(self):
@@ -22,36 +24,35 @@ class Node:
 
     def find_hierarchy(self):
 
-        branch_mask = self.sequences[:, 0] == 1
+        self.check_if_node()
+        if self.name is not None:
+            return self
+        else:
+            self.order_features()
+            branch_mask = self.sequences[:, 0] == 1
+            branch_species = self.species[branch_mask]
+            branch_sequences = self.sequences[branch_mask, 1:self.sequences.shape[1]]
 
-        branch_species = self.species[branch_mask]
-        branch_sequences = self.sequences[branch_mask, 1:self.sequences.shape[1]]
+            self.sequences = self.sequences[~branch_mask, 1:self.sequences.shape[1]]
+            self.features = self.features[1:len(self.features)]
+            self.species = self.species[~branch_mask]
 
-        self.sequences = self.sequences[~branch_mask, 1:self.sequences.shape[1]]
-        self.features = self.features[1:len(self.features)]
-        self.species = self.species[~branch_mask]
+            branch = Node(branch_sequences, branch_species, self.features, parent=self, missing_links=self.missing_links)
+            self.children.append(branch)
 
-        branch = Node(branch_sequences, branch_species, self.features, parent=self)
-
-        branch.is_leaflet()
-        if branch.name is None:
-            branch.order_features()
             branch.find_hierarchy()
-
-        self.is_leaflet()
-        if self.name is None:
-            branch.order_features()
             self.find_hierarchy()
 
-        self.children.append(branch)
+            self.connections = self.connections + [(self.name, branch.name)] + branch.connections
 
-        return self
+            return self
 
-    def is_leaflet(self):
-        if len(self.species) == 1:
+    def check_if_node(self):
+        if len(self.species) == 1 and np.count_nonzero(self.sequences) == 0:
             self.name = self.species[0]
         elif len(self.species) == 0:
-            self.name = "Missing link"
+            self.name = "Missing link for " + ' '.join([x.name for x in self.children])
+            self.missing_links += 1
 
 
 class PhylogeneticNetwork(Node):
