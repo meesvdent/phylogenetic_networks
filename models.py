@@ -54,5 +54,6 @@ class Node:
 
 
 class PhylogeneticNetwork(Node):
-    pass
+
+    def euclid_distance(self):
 
